@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="mb-4">Add New Student</h2>
+
+{% if message %}
+<div class="alert {% if 'Error' in message %}alert-danger{% else %}alert-success{% endif %} alert-dismissible fade show">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="/add_teacher">
+            <div class="mb-3">
+                <label for="name" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="mb-3">
+                <label for="department" class="form-label">Department</label>
+                <input type="text" class="form-control" id="department" name="department" required>
+            </div>
+            <div class="mb-3">
+                <label for="employee_id" class="form-label">Student ID</label>
+                <input type="text" class="form-control" id="employee_id" name="employee_id" required>
+                <div class="form-text">Must be unique for each student</div>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Student</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="mb-4">Dashboard</h2>
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h5 class="card-title">Total Student</h5>
+                <h2 class="card-text">{{ total_teachers }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h5 class="card-title">Present Today</h5>
+                <h2 class="card-text">{{ present_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h5 class="card-title">Absent Today</h5>
+                <h2 class="card-text">{{ absent_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card bg-warning">
+            <div class="card-body text-center">
+                <h5 class="card-title">On Leave Today</h5>
+                <h2 class="card-text">{{ leave_count }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5>Today's Date: {{ today }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <a href="/mark_attendance" class="btn btn-primary">Mark Attendance</a>
+            <a href="/view_attendance?date={{ today }}" class="btn btn-secondary">View Today's Attendance</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="mb-4">View Attendance</h2>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5 class="mb-0">Date: {{ selected_date }}</h5>
+            </div>
+            <div class="col-md-6">
+                <form method="GET" action="/view_attendance" class="d-flex">
+                    <input type="date" name="date" class="form-control" value="{{ selected_date }}">
+                    <button type="submit" class="btn btn-primary ms-2">Filter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if attendance_data %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Student ID</th>
+                        <th>Status</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance_data %}
+                    <tr>
+                        <td>{{ record.teacher_name }}</td>
+                        <td>{{ record.department }}</td>
+                        <td>{{ record.employee_id }}</td>
+                        <td>
+                            <span class="badge {% if record.status == 'Present' %}bg-success{% elif record.status == 'Absent' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ record.status }}
+                            </span>
+                        </td>
+                        <td>{{ record.note }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            No attendance records found for this date.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
