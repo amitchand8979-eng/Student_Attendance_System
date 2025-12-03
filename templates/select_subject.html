@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Select Subject</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Please select a subject to continue:</p>
+                    <div class="row row-cols-1 row-cols-md-2 g-4">
+                        {% for subject in subjects %}
+                        <div class="col">
+                            <form method="POST" action="{{ url_for('select_subject') }}" class="mb-0">
+                                <input type="hidden" name="subject" value="{{ subject }}">
+                                <button type="submit" class="btn btn-outline-primary w-100 py-3">
+                                    <h5 class="mb-0">{{ subject }}</h5>
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .btn-outline-primary {
+        transition: all 0.3s;
+    }
+    .btn-outline-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .card {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        border: none;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    .card-header {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}

@@ -1,33 +1,151 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
-<h2 class="mb-4">Add New Student</h2>
-
-{% if message %}
-<div class="alert {% if 'Error' in message %}alert-danger{% else %}alert-success{% endif %} alert-dismissible fade show">
-    {{ message }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-{% endif %}
-
-<div class="card">
-    <div class="card-body">
-        <form method="POST" action="/add_teacher">
-            <div class="mb-3">
-                <label for="name" class="form-label">Full Name</label>
-                <input type="text" class="form-control" id="name" name="name" required>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Manage Students - {{ current_subject }}</h2>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+    
+    {% if message %}
+    <div class="alert {% if 'Error' in message %}alert-danger{% else %}alert-success{% endif %} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Add New Student</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="/add_teacher">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="department" class="form-label">Department</label>
+                        <input type="text" class="form-control" id="department" name="department" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="employee_id" class="form-label">Student ID</label>
+                        <input type="text" class="form-control" id="employee_id" name="employee_id" required>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-lg"></i> Add
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Student List</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if teachers %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Student ID</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for teacher in teachers %}
+                        <tr id="teacher-{{ teacher['id'] }}">
+                            <td>{{ teacher['name'] }}</td>
+                            <td>{{ teacher['department'] }}</td>
+                            <td>{{ teacher['employee_id'] }}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-danger delete-teacher" 
+                                        data-teacher-id="{{ teacher['id'] }}"
+                                        data-teacher-name="{{ teacher['name'] }}">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <div class="mb-3">
-                <label for="department" class="form-label">Department</label>
-                <input type="text" class="form-control" id="department" name="department" required>
+            {% else %}
+            <div class="text-center p-4">
+                <p class="text-muted mb-0">No students added yet. Add a student using the form above.</p>
             </div>
-            <div class="mb-3">
-                <label for="employee_id" class="form-label">Student ID</label>
-                <input type="text" class="form-control" id="employee_id" name="employee_id" required>
-                <div class="form-text">Must be unique for each student</div>
-            </div>
-            <button type="submit" class="btn btn-primary">Add Student</button>
-        </form>
+            {% endif %}
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Delete teacher with confirmation
+    $(document).on('click', '.delete-teacher', function() {
+        const teacherId = $(this).data('teacher-id');
+        const teacherName = $(this).data('teacher-name');
+        
+        if (confirm(`Are you sure you want to delete "${teacherName}"? This action cannot be undone.`)) {
+            $.ajax({
+                url: `/api/delete_teacher/${teacherId}`,
+                type: 'DELETE',
+                success: function(response) {
+                    if (response.success) {
+                        $(`#teacher-${teacherId}`).fadeOut(300, function() {
+                            $(this).remove();
+                            // Show success message
+                            showAlert(`"${teacherName}" has been deleted.`, 'success');
+                            
+                            // If no teachers left, show empty state
+                            if ($('tbody tr').length === 0) {
+                                $('tbody').html(`
+                                    <tr>
+                                        <td colspan="4" class="text-center p-4">
+                                            <p class="text-muted mb-0">No students added yet. Add a student using the form above.</p>
+                                        </td>
+                                    </tr>
+                                `);
+                            }
+                        });
+                    } else {
+                        showAlert(`Error: ${response.error || 'Failed to delete student.'}`, 'danger');
+                    }
+                },
+                error: function(xhr) {
+                    const errorMsg = xhr.responseJSON?.error || 'Failed to delete student.';
+                    showAlert(`Error: ${errorMsg}`, 'danger');
+                }
+            });
+        }
+    });
+    
+    // Function to show alert messages
+    function showAlert(message, type) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        
+        // Remove any existing alerts
+        $('.alert-dismissible').alert('close');
+        
+        // Add the new alert after the h2
+        $('h2').after(alertHtml);
+    }
+});
+</script>
 {% endblock %}

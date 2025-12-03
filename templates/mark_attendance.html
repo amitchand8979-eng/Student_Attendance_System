@@ -1,51 +1,102 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
-<h2 class="mb-4">Mark Attendance</h2>
-
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Date: <span id="current-date">{{ today }}</span></h5>
-        <input type="date" id="attendance-date" class="form-control" style="width: 200px;" value="{{ today }}">
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Mark Attendance</h2>
+            <p class="text-muted mb-0">{{ today }} - {{ current_subject }}</p>
+        </div>
+        <div>
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <span class="badge bg-success p-2">
+                        <i class="bi bi-check-circle"></i> Present
+                    </span>
+                    <span class="badge bg-danger p-2 ms-2">
+                        <i class="bi bi-x-circle"></i> Absent
+                    </span>
+                </div>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Department</th>
-                        <th>Student ID</th>
-                        <th>Status</th>
-                        <th>Note</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for teacher in teachers %}
-                    <tr data-teacher-id="{{ teacher.id }}">
-                        <td>{{ teacher.name }}</td>
-                        <td>{{ teacher.department }}</td>
-                        <td>{{ teacher.employee_id }}</td>
-                        <td>
-                            <select class="form-select status-select">
-                                <option value="">Select Status</option>
-                                <option value="Present">Present</option>
-                                <option value="Absent">Absent</option>
-                                <option value="Leave">Leave</option>
-                            </select>
-                        </td>
-                        <td>
-                            <input type="text" class="form-control note-input" placeholder="Optional note">
-                        </td>
-                        <td>
-                            <button class="btn btn-primary btn-sm save-btn">Save</button>
-                            <span class="text-success save-status" style="display: none;">✓ Saved</span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    
+    <div id="attendanceAlert" class="alert alert-success d-none" role="alert">
+        <i class="bi bi-check-circle-fill"></i> Attendance saved successfully!
+        <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Student List</h5>
+            <div class="d-flex align-items-center">
+                <span id="savingIndicator" class="text-muted me-3 d-none">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Saving...
+                </span>
+                <div class="input-group input-group-sm" style="width: 200px;">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search students...">
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if not teachers %}
+            <div class="text-center p-5">
+                <div class="mb-3">
+                    <i class="bi bi-people text-muted" style="font-size: 3rem; opacity: 0.5;"></i>
+                </div>
+                <h5>No students found</h5>
+                <p class="text-muted">Add students to this subject first.</p>
+                <a href="{{ url_for('add_teacher') }}" class="btn btn-primary mt-2">
+                    <i class="bi bi-person-plus"></i> Add Students
+                </a>
+            </div>
+            {% else %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Department</th>
+                            <th>Student ID</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTableBody">
+                        {% for teacher in teachers %}
+                        <tr data-teacher-id="{{ teacher['id'] }}" data-name="{{ teacher['name'] }}">
+                            <td>{{ teacher['name'] }}</td>
+                            <td>{{ teacher['department'] }}</td>
+                            <td>{{ teacher['employee_id'] }}</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" 
+                                            class="btn {% if teacher.get('attendance_status') == 'Present' %}btn-success active{% else %}btn-outline-secondary{% endif %} attendance-btn" 
+                                            data-status="Present"
+                                            data-teacher-id="{{ teacher['id'] }}">
+                                        <i class="bi bi-check-lg"></i> Present
+                                    </button>
+                                    <button type="button" 
+                                            class="btn {% if teacher.get('attendance_status') == 'Absent' %}btn-danger active{% else %}btn-outline-secondary{% endif %} attendance-btn" 
+                                            data-status="Absent"
+                                            data-teacher-id="{{ teacher['id'] }}">
+                                        <i class="bi bi-x-lg"></i> Absent
+                                    </button>
+                                </div>
+                                <div class="saved-indicator text-success mt-1" style="font-size: 0.75rem; display: none;">
+                                    <i class="bi bi-check-circle-fill"></i> Saved
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -53,86 +104,152 @@
 
 {% block scripts %}
 <script>
-    $(document).ready(function() {
+$(document).ready(function() {
+    // Function to show alert messages
+    function showAlert(message, type) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
         
-        $('#attendance-date').change(function() {
-            $('#current-date').text($(this).val());
-           
-            $('.save-status').hide();
-        });
+        // Remove any existing alerts
+        $('.alert-dismissible').not('#attendanceAlert').alert('close');
+        
+        // Add the new alert after the header
+        $('h2').after(alertHtml);
+    }
 
+    // Handle attendance button clicks
+    $(document).on('click', '.attendance-btn', function() {
+        const teacherId = $(this).data('teacher-id');
+        const status = $(this).data('status');
+        const row = $(this).closest('tr');
+        const savedIndicator = row.find('.saved-indicator');
         
-        $(document).on('click', '.save-btn', function() {
-            const btn = $(this);
-            const row = btn.closest('tr');
-            const teacherId = row.data('teacher-id');
-            const status = row.find('.status-select').val();
-            const note = row.find('.note-input').val();
-            const date = $('#attendance-date').val();
-            
-            if (!status) {
-                alert('Please select an attendance status');
-                return;
-            }
-            
-            
-            $.ajax({
-                url: '/api/mark_attendance',
-                method: 'POST',
-                data: {
-                    teacher_id: teacherId,
-                    date: date,
-                    status: status,
-                    note: note
-                },
-                success: function(response) {
-                    if (response.success) {
-                        
-                        btn.hide();
-                        row.find('.save-status').show();
-                        
-                        
-                        setTimeout(function() {
-                            btn.show();
-                            row.find('.save-status').hide();
-                        }, 3000);
-                    }
-                },
-                error: function(error) {
-                    alert('Error saving attendance: ' + error.responseText);
-                }
-            });
-        });
+        // Update UI immediately for better responsiveness
+        const buttons = row.find('.attendance-btn');
+        buttons.removeClass('btn-success btn-danger active').addClass('btn-outline-secondary');
         
-        
-        function loadAttendanceData() {
-            const date = $('#attendance-date').val();
-            
-            $.getJSON('/api/get_attendance?date=' + date, function(data) {
-                
-                $('tr[data-teacher-id]').each(function() {
-                    $(this).find('.status-select').val('');
-                    $(this).find('.note-input').val('');
-                    $(this).find('.save-status').hide();
-                });
-                
-    
-                data.forEach(function(record) {
-                    const row = $('tr[data-teacher-id="' + record.teacher_id + '"]');
-                    if (row.length) {
-                        row.find('.status-select').val(record.status);
-                        row.find('.note-input').val(record.note || '');
-                       
-                        row.find('.save-btn').hide();
-                        row.find('.save-status').show();
-                    }
-                });
-            });
+        if (status === 'Present') {
+            $(this).removeClass('btn-outline-secondary').addClass('btn-success active');
+        } else {
+            $(this).removeClass('btn-outline-secondary').addClass('btn-danger active');
         }
         
-       
-        loadAttendanceData();
-        $('#attendance-date').change(loadAttendanceData);
+        // Show saving indicator
+        const savingIndicator = $('#savingIndicator');
+        savingIndicator.removeClass('d-none');
+        
+        // Send request to server
+        $.ajax({
+            url: '{{ url_for("api_mark_attendance") }}',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                teacher_id: teacherId,
+                date: '{{ today }}',
+                status: status
+            }),
+            success: function(response) {
+                if (response.success) {
+                    // Show saved indicator
+                    savedIndicator.fadeIn(200).delay(2000).fadeOut(1000);
+                    
+                    // Show success alert for the first time
+                    if (localStorage.getItem('attendanceSaved') === null) {
+                        $('#attendanceAlert').removeClass('d-none').addClass('show');
+                        localStorage.setItem('attendanceSaved', 'true');
+                        
+                        // Auto-hide after 3 seconds
+                        setTimeout(function() {
+                            $('#attendanceAlert').fadeOut(1000, function() {
+                                $(this).addClass('d-none').removeClass('show');
+                            });
+                        }, 3000);
+                    }
+                } else {
+                    showAlert(`Error: ${response.error || 'Failed to save attendance.'}`, 'danger');
+                }
+            },
+            error: function(xhr) {
+                const errorMsg = xhr.responseJSON?.error || 'Failed to save attendance. Please try again.';
+                showAlert(`Error: ${errorMsg}`, 'danger');
+                
+                // Revert UI on error - use the previous active button's status
+                const activeButton = row.find('.btn-success.active, .btn-danger.active');
+                if (activeButton.length > 0) {
+                    const currentStatus = activeButton.data('status');
+                    buttons.removeClass('btn-success btn-danger active').addClass('btn-outline-secondary');
+                    
+                    if (currentStatus === 'Present') {
+                        buttons.filter('[data-status="Present"]').removeClass('btn-outline-secondary').addClass('btn-success active');
+                    } else if (currentStatus === 'Absent') {
+                        buttons.filter('[data-status="Absent"]').removeClass('btn-outline-secondary').addClass('btn-danger active');
+                    }
+                }
+            },
+            complete: function() {
+                savingIndicator.addClass('d-none');
+            }
+        });
     });
+    
+    // Search functionality
+    $('#searchInput').on('keyup', function() {
+        const searchText = $(this).val().toLowerCase();
+        
+        if (searchText.length > 0) {
+            $('#attendanceTableBody tr').each(function() {
+                const name = $(this).data('name').toLowerCase();
+                const employeeId = $(this).find('td:eq(2)').text().toLowerCase();
+                const department = $(this).find('td:eq(1)').text().toLowerCase();
+                
+                if (name.includes(searchText) || 
+                    employeeId.includes(searchText) ||
+                    department.includes(searchText)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        } else {
+            $('#attendanceTableBody tr').show();
+        }
+    });
+    
+    // Function to show alert messages
+    function showAlert(message, type) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        
+        // Remove any existing alerts
+        $('.alert-dismissible').not('#attendanceAlert').alert('close');
+        
+        // Add the new alert after the header
+        $('h2').after(alertHtml);
+    }
+});
+</script>
+
+<style>
+.attendance-btn {
+    min-width: 100px;
+}
+.attendance-btn i {
+    margin-right: 4px;
+}
+.attendance-btn.active {
+    color: white !important;
+}
+.saved-indicator {
+    transition: opacity 0.3s;
+}
+</style>
 </script>
 {% endblock %}

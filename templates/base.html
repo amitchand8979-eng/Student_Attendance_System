@@ -5,29 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Attendance System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="/">Student Attendance System</a>
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">Student Attendance System</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                {% if 'current_subject' in session %}
+                <span class="navbar-text me-3 d-none d-lg-block">
+                    <i class="bi bi-book"></i> {{ session['current_subject'] }}
+                </span>
+                {% endif %}
+                <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Dashboard</a>
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/add_teacher">Add Student</a>
+                        <a class="nav-link" href="{{ url_for('add_teacher') }}">
+                            <i class="bi bi-person-plus"></i> Add Student
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/mark_attendance">Mark Attendance</a>
+                        <a class="nav-link" href="{{ url_for('mark_attendance') }}">
+                            <i class="bi bi-check2-square"></i> Mark Attendance
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/view_attendance">View Attendance</a>
+                        <a class="nav-link" href="{{ url_for('view_attendance') }}">
+                            <i class="bi bi-calendar-check"></i> View Attendance
+                        </a>
                     </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if 'current_subject' in session %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('select_subject') }}" title="Change Subject">
+                            <i class="bi bi-arrow-repeat"></i> Change Subject
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
